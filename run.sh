@@ -14,6 +14,10 @@ until [[ "$STATUS" =~ ^true ]]; do
     STATUS=$(curl -s http://localhost:4444/wd/hub/status | jq -r '.value.ready')
 done
 
+# Vamos esperar mais um pouco para garantir
+echo "Serviço pronto, esperando mais 60 segundos..."
+sleep 60
+
 # Executa o teste
 cd /home/ubuntu/jitsi-meet-torture/
 ./scripts/malleus.sh \
