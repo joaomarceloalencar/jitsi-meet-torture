@@ -25,4 +25,5 @@ cd /home/ubuntu/jitsi-meet-torture/
 	--hub-url=http://localhost:4444/wd/hub \
 	--allow-insecure-certs=true \
 	--use-load-test \
-	--instance-url=https://${INSTANCE}/
+	--room-name-prefix=$(hostname) \ 
+	--instance-url=https://${INSTANCE}/ 
