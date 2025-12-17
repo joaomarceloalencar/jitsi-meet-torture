@@ -1,5 +1,5 @@
 #!/bin/bash
-exec > /home/ubuntu/jitsi-torture.log.log 2>&1
+exec > /home/ubuntu/jitsi-torture.log 2>&1
 INSTANCE=$1
 
 # Para os contêineres
