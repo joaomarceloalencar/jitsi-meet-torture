@@ -12,4 +12,4 @@ echo "$(date): Instância pronta para receber comandos via SSH"
 rm -f /home/ubuntu/jitsi-torture.log
 
 # Recupera os scripts necessários
-git clone https://github.com/joaomarceloalencar/jitsi-meet-torture.git /home/ubuntu/scripts`
+git clone https://github.com/joaomarceloalencar/jitsi-meet-torture.git /home/ubuntu/scripts
