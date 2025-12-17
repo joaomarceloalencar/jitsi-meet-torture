@@ -13,3 +13,6 @@ rm -f /home/ubuntu/jitsi-torture.log
 
 # Recupera os scripts necessários
 git clone https://github.com/joaomarceloalencar/jitsi-meet-torture.git /home/ubuntu/scripts
+
+# Torna os scripts executáveis
+chmod +x /home/ubuntu/scripts/run.sh
