@@ -15,8 +15,8 @@ until [[ "$STATUS" =~ ^true ]]; do
 done
 
 # Vamos esperar mais um pouco para garantir
-echo "Serviço pronto, esperando mais 60 segundos..."
-sleep 60
+# echo "Serviço pronto, esperando mais 60 segundos..."
+# sleep 60
 
 # Executa o teste
 cd /home/ubuntu/jitsi-meet-torture/
