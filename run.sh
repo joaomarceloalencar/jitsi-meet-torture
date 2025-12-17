@@ -17,6 +17,12 @@ done
 # Vamos esperar mais um pouco para garantir
 # echo "Serviço pronto, esperando mais 60 segundos..."
 # sleep 60
+echo "Aquecendo o /dev/shm para o Chrome funcionar corretamente..."
+docker run --rm \
+  --entrypoint /bin/true \
+  --volume /dev/shm:/dev/shm \
+  jitsi/standalone-chrome:latest
+
 
 # Executa o teste
 cd /home/ubuntu/jitsi-meet-torture/
