@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# Script para criar múltiplas instâncias EC2 com user data e sincronização
-# Uso: ./create_instances.sh <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id] [subnet_id]
+# Script para criar múltiplas instâncias EC2 com user data
+# Uso: ./create_instances.sh <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id]
 
 set -e
 
 # Verifica se a AMI foi fornecida
 if [ -z "$1" ]; then
     echo "Erro: AMI_ID é obrigatório"
-    echo "Uso: $0 <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id] [subnet_id]"
+    echo "Uso: $0 <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id]"
     exit 1
 fi
 
 # Verifica se o número de instâncias foi fornecido
 if [ -z "$2" ]; then
     echo "Erro: NUM_INSTANCES é obrigatório"
-    echo "Uso: $0 <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id] [subnet_id]"
+    echo "Uso: $0 <AMI_ID> <NUM_INSTANCES> [instance_type] [key_name] [security_group_id]"
     exit 1
 fi
 
@@ -32,14 +32,13 @@ NUM_INSTANCES="$2"
 INSTANCE_TYPE="${3:-t3.medium}"
 KEY_NAME="${4:-your-key-name}"
 SECURITY_GROUP="${5:-}"
-SUBNET_ID="${6:-}"
 
 echo "Criando $NUM_INSTANCES instâncias EC2..."
 echo "AMI: $AMI_ID"
 echo "Instance Type: $INSTANCE_TYPE"
 echo "Key Name: $KEY_NAME"
 
-# Cria o user data simplificado
+# Cria o user data
 USER_DATA_TEMP=$(mktemp)
 cat "$SCRIPT_DIR/user_data.sh" > "$USER_DATA_TEMP"
 
@@ -81,9 +80,11 @@ for i in $(seq 1 $NUM_INSTANCES); do
     echo "Instância $i criada: $INSTANCE_ID"
 done
 
+# Remove arquivo temporário
+rm -f "$USER_DATA_TEMP"
+
 if [ ${#INSTANCE_IDS[@]} -eq 0 ]; then
     echo "Erro: Nenhuma instância foi criada com sucesso"
-    rm -f "$USER_DATA_TEMP"
     exit 1
 fi
 
@@ -95,12 +96,13 @@ aws ec2 wait instance-running --instance-ids "${INSTANCE_IDS[@]}"
 
 echo "Todas as instâncias estão em running!"
 
-# Array para armazenar IPs
-INSTANCE_IPS=()
-
 echo ""
-echo "Aguardando SSH ficar disponível em todas as instâncias..."
-
+echo "=========================================="
+echo "Processo concluído com sucesso!"
+echo "Total de instâncias criadas: ${#INSTANCE_IDS[@]}"
+echo "=========================================="
+echo ""
+echo "Instâncias criadas:"
 for INSTANCE_ID in "${INSTANCE_IDS[@]}"; do
     PUBLIC_IP=$(aws ec2 describe-instances \
         --instance-ids $INSTANCE_ID \
@@ -108,65 +110,17 @@ for INSTANCE_ID in "${INSTANCE_IDS[@]}"; do
         --output text)
     
     if [ -z "$PUBLIC_IP" ] || [ "$PUBLIC_IP" = "None" ]; then
-        echo "Aviso: Não foi possível obter IP público para $INSTANCE_ID"
-        continue
+        PUBLIC_IP="N/A"
     fi
     
-    INSTANCE_IPS+=("$PUBLIC_IP")
-    echo "Testando SSH para $INSTANCE_ID ($PUBLIC_IP)..."
-    
-    # Aguarda SSH estar disponível
-    MAX_ATTEMPTS=30
-    ATTEMPT=0
-    while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-        if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -i ~/.ssh/$KEY_NAME.pem ubuntu@$PUBLIC_IP "exit" 2>/dev/null; then
-            echo "  SSH disponível em $PUBLIC_IP"
-            break
-        fi
-        ATTEMPT=$((ATTEMPT + 1))
-        sleep 10
-    done
-    
-    if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-        echo "  Timeout aguardando SSH em $PUBLIC_IP"
-    fi
+    echo "  - $INSTANCE_ID: $PUBLIC_IP"
 done
 
 echo ""
-echo "Executando testes simultaneamente em todas as instâncias..."
-echo ""
-
-# Esperar um minimo para garantir que todas as instâncias estejam prontas
-echo "Espere mais 60 segundos para garantir que todas as instâncias estejam prontas..."
-sleep 60
-
-# Executa o script em todas as instâncias em paralelo (background)
-PIDS=()
-for IP in "${INSTANCE_IPS[@]}"; do
-    echo "Iniciando teste em $IP..."
-    ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ubuntu@$IP \
-        'nohup /home/ubuntu/run.sh > /home/ubuntu/jitsi-torture.log 2>&1 &' &
-    PIDS+=($!)
-done
-
-echo ""
-echo "Aguardando 5 segundos para garantir que todos iniciaram..."
-sleep 5
-
-echo ""
-echo "=========================================="
-echo "Testes iniciados simultaneamente!"
-echo "Total de instâncias: ${#INSTANCE_IDS[@]}"
-echo "=========================================="
-echo ""
-echo "Instâncias criadas:"
-for i in "${!INSTANCE_IDS[@]}"; do
-    echo "  - ${INSTANCE_IDS[$i]}: ${INSTANCE_IPS[$i]}"
-done
-
+echo "O user_data.sh será executado automaticamente nas instâncias."
 echo ""
 echo "Para verificar os logs de uma instância:"
-echo "ssh -i ~/.ssh/$KEY_NAME.pem ubuntu@<IP> 'tail -f /home/ubuntu/jitsi-torture.log'"
+echo "ssh -i ~/.ssh/$KEY_NAME.pem ubuntu@<IP> 'tail -f /home/ubuntu/setup.log'"
 echo ""
 echo "Para terminar todas as instâncias:"
 echo "aws ec2 terminate-instances --instance-ids ${INSTANCE_IDS[*]}"
