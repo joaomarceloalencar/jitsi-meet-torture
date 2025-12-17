@@ -136,12 +136,16 @@ echo ""
 echo "Executando testes simultaneamente em todas as instâncias..."
 echo ""
 
+# Esperar um minimo para garantir que todas as instâncias estejam prontas
+echo "Espere mais 60 segundos para garantir que todas as instâncias estejam prontas..."
+sleep 60
+
 # Executa o script em todas as instâncias em paralelo (background)
 PIDS=()
 for IP in "${INSTANCE_IPS[@]}"; do
     echo "Iniciando teste em $IP..."
     ssh -o StrictHostKeyChecking=no -i ~/.ssh/$KEY_NAME.pem ubuntu@$IP \
-        '/home/ubuntu/run.sh > /home/ubuntu/jitsi-torture.log 2>&1' &
+        'nohup /home/ubuntu/run.sh > /home/ubuntu/jitsi-torture.log 2>&1 &' &
     PIDS+=($!)
 done
 
