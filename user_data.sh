@@ -13,3 +13,6 @@ git clone https://github.com/joaomarceloalencar/jitsi-meet-torture.git /home/ubu
 
 # Torna os scripts executáveis
 chmod +x /home/ubuntu/scripts/run.sh
+
+# Executa o aquecimento
+sudo -u ubuntu /home/ubuntu/scripts/run.sh jitsi.joao.marcelo.nom.br
