@@ -16,3 +16,6 @@ chmod +x /home/ubuntu/scripts/run.sh
 
 # Executa o aquecimento
 sudo -u ubuntu /home/ubuntu/scripts/run.sh jitsi.joao.marcelo.nom.br
+
+# Executa a versão de fato
+sudo -u ubuntu /home/ubuntu/scripts/run.sh jitsi.joao.marcelo.nom.br
