@@ -2,6 +2,9 @@
 exec > /home/ubuntu/jitsi-torture.log 2>&1
 INSTANCE=$1
 
+# Atualiza para o IP atual do jisti-meet
+sudo sed -i 's/172\.31\.95\.251/172.31.18.66/' /etc/hosts
+
 # Para os contêineres
 cd /home/ubuntu/jitsi-meet-torture/doc/grid
 docker compose -f docker-compose.yml down
