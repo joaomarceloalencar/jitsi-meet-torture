@@ -1,0 +1,154 @@
+---
+# Common configuration for all Jitsi components
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-common-config
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+data:
+  # Public URL
+  PUBLIC_URL: "https://jitsi.macbookpro"
+  
+  # XMPP settings
+  XMPP_DOMAIN: "meet.jitsi"
+  XMPP_AUTH_DOMAIN: "auth.meet.jitsi"
+  XMPP_MUC_DOMAIN: "muc.meet.jitsi"
+  XMPP_INTERNAL_MUC_DOMAIN: "internal-muc.meet.jitsi"
+  XMPP_GUEST_DOMAIN: "guest.meet.jitsi"
+  XMPP_RECORDER_DOMAIN: "recorder.meet.jitsi"
+  
+  # XMPP server
+  XMPP_SERVER: "prosody"
+  
+  # JVB settings
+  JVB_BREWERY_MUC: "jvbbrewery"
+  JVB_AUTH_USER: "jvb"
+  
+  # Jicofo settings
+  JICOFO_COMPONENT_SECRET: "s3cr3t"
+  JICOFO_AUTH_USER: "focus"
+  
+  # JWT Authentication
+  ENABLE_AUTH: "1"
+  AUTH_TYPE: "jwt"
+  JWT_APP_ID: "jitsi-meet"
+  JWT_ACCEPTED_ISSUERS: "jitsi-meet"
+  JWT_ACCEPTED_AUDIENCES: "jitsi-meet"
+  JWT_ASAP_KEYSERVER: ""
+  JWT_ALLOW_EMPTY: "0"
+  JWT_AUTH_TYPE: "token"
+  JWT_TOKEN_AUTH_MODULE: "token_verification"
+  
+  # Misc
+  TZ: "America/Los_Angeles"
+  ENABLE_LETSENCRYPT: "0"
+
+---
+# Jitsi Web configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-web-config
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: web
+data:
+  # Enable JWT in web interface
+  ENABLE_JWT: "1"
+  JWT_ENABLE_TOKEN_AUTH: "1"
+  
+  # Nginx settings
+  ENABLE_HTTP_REDIRECT: "1"
+  
+  # Transcription
+  ENABLE_TRANSCRIPTIONS: "0"
+  
+  # Recording
+  ENABLE_RECORDING: "0"
+  
+  # Calendar integration
+  ENABLE_CALENDAR: "0"
+  
+  # Misc features
+  ENABLE_GUESTS: "1"
+  ENABLE_IPV6: "0"
+  ENABLE_LOBBY: "1"
+
+---
+# Prosody (XMPP server) configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-prosody-config
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: prosody
+data:
+  # Global module configuration
+  GLOBAL_MODULES: "statistics,alert"
+  GLOBAL_CONFIG: ""
+  
+  # LDAP settings (disabled)
+  LDAP_URL: ""
+  LDAP_BASE: ""
+  
+  # Enable guest access
+  ENABLE_GUESTS: "1"
+  
+  # Log level
+  LOG_LEVEL: "info"
+
+---
+# Jicofo (Jitsi Conference Focus) configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-jicofo-config
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jicofo
+data:
+  # Authentication
+  JICOFO_ENABLE_AUTH: "1"
+  
+  # Component secret
+  JICOFO_COMPONENT_SECRET: "s3cr3t"
+  
+  # Reservation
+  JICOFO_ENABLE_BRIDGE_HEALTH_CHECKS: "true"
+  
+  # Max memory
+  JICOFO_MAX_MEMORY: "3072m"
+
+---
+# JVB (Jitsi Videobridge) configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jitsi-jvb-config
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jvb
+data:
+  # Enable statistics
+  JVB_ENABLE_APIS: "rest,colibri"
+  
+  # Port settings
+  JVB_PORT: "10000"
+  JVB_TCP_HARVESTER_DISABLED: "true"
+  JVB_TCP_PORT: "4443"
+  
+  # STUN servers
+  JVB_STUN_SERVERS: "meet-jit-si-turnrelay.jitsi.net:443"
+  
+  # Max memory
+  JVB_MAX_MEMORY: "3072m"
+  
+  # Enable colibri websockets
+  COLIBRI_WEBSOCKET_ENABLED: "1"

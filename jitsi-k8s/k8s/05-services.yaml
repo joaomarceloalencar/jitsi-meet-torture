@@ -1,0 +1,122 @@
+---
+# Jitsi Web Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: jitsi-web
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: web
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  selector:
+    app: jitsi-meet
+    component: web
+
+---
+# Prosody (XMPP) Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prosody
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: prosody
+spec:
+  type: ClusterIP
+  ports:
+  - name: xmpp-c2s
+    port: 5222
+    targetPort: 5222
+    protocol: TCP
+  - name: xmpp-s2s
+    port: 5269
+    targetPort: 5269
+    protocol: TCP
+  - name: xmpp-component
+    port: 5347
+    targetPort: 5347
+    protocol: TCP
+  - name: bosh
+    port: 5280
+    targetPort: 5280
+    protocol: TCP
+  selector:
+    app: jitsi-meet
+    component: prosody
+
+---
+# Jicofo Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: jicofo
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jicofo
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 8888
+    protocol: TCP
+  selector:
+    app: jitsi-meet
+    component: jicofo
+
+---
+# JVB (Videobridge) Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: jvb
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jvb
+spec:
+  type: ClusterIP
+  ports:
+  - name: colibri
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: jitsi-meet
+    component: jvb
+
+---
+# JVB UDP Service (for media streaming)
+# This service is used for RTP/UDP traffic
+apiVersion: v1
+kind: Service
+metadata:
+  name: jvb-udp
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jvb
+spec:
+  type: NodePort
+  ports:
+  - name: rtp-udp
+    port: 10000
+    targetPort: 10000
+    protocol: UDP
+    nodePort: 30000
+  selector:
+    app: jitsi-meet
+    component: jvb

@@ -1,0 +1,617 @@
+---
+# Jitsi Web Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jitsi-web
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jitsi-meet
+      component: web
+  template:
+    metadata:
+      labels:
+        app: jitsi-meet
+        component: web
+    spec:
+      hostAliases:
+      - ip: "10.102.178.166"
+        hostnames:
+        - "xmpp.meet.jitsi"
+      containers:
+      - name: jitsi-web
+        image: jitsi/web:stable-9258
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        - name: https
+          containerPort: 443
+          protocol: TCP
+        env:
+        # Import common config
+        - name: PUBLIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: PUBLIC_URL
+        - name: XMPP_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_DOMAIN
+        - name: XMPP_AUTH_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_AUTH_DOMAIN
+        - name: XMPP_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_MUC_DOMAIN
+        - name: XMPP_INTERNAL_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_INTERNAL_MUC_DOMAIN
+        - name: XMPP_GUEST_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_GUEST_DOMAIN
+        - name: XMPP_RECORDER_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_RECORDER_DOMAIN
+        - name: XMPP_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_SERVER
+        - name: JVB_BREWERY_MUC
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_BREWERY_MUC
+        - name: ENABLE_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: ENABLE_AUTH
+        - name: AUTH_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: AUTH_TYPE
+        - name: JWT_APP_ID
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_APP_ID
+        - name: JWT_ACCEPTED_ISSUERS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_ACCEPTED_ISSUERS
+        - name: JWT_ACCEPTED_AUDIENCES
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_ACCEPTED_AUDIENCES
+        - name: JWT_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-jwt
+              key: JWT_APP_SECRET
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: TZ
+        # Import web-specific config
+        - name: ENABLE_GUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-web-config
+              key: ENABLE_GUESTS
+        - name: ENABLE_HTTP_REDIRECT
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-web-config
+              key: ENABLE_HTTP_REDIRECT
+        - name: ENABLE_TRANSCRIPTIONS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-web-config
+              key: ENABLE_TRANSCRIPTIONS
+        - name: ENABLE_RECORDING
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-web-config
+              key: ENABLE_RECORDING
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+# Prosody (XMPP) Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prosody
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: prosody
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jitsi-meet
+      component: prosody
+  template:
+    metadata:
+      labels:
+        app: jitsi-meet
+        component: prosody
+    spec:
+      containers:
+      - name: prosody
+        image: jitsi/prosody:stable-9258
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: xmpp-c2s
+          containerPort: 5222
+          protocol: TCP
+        - name: xmpp-s2s
+          containerPort: 5269
+          protocol: TCP
+        - name: xmpp-component
+          containerPort: 5347
+          protocol: TCP
+        - name: bosh
+          containerPort: 5280
+          protocol: TCP
+        env:
+        # Import common config
+        - name: PUBLIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: PUBLIC_URL
+        - name: XMPP_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_DOMAIN
+        - name: XMPP_AUTH_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_AUTH_DOMAIN
+        - name: XMPP_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_MUC_DOMAIN
+        - name: XMPP_INTERNAL_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_INTERNAL_MUC_DOMAIN
+        - name: XMPP_GUEST_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_GUEST_DOMAIN
+        - name: XMPP_RECORDER_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_RECORDER_DOMAIN
+        - name: JVB_BREWERY_MUC
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_BREWERY_MUC
+        - name: JVB_AUTH_USER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_AUTH_USER
+        - name: JICOFO_COMPONENT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JICOFO_COMPONENT_SECRET
+        - name: JICOFO_AUTH_USER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JICOFO_AUTH_USER
+        - name: ENABLE_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: ENABLE_AUTH
+        - name: AUTH_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: AUTH_TYPE
+        - name: JWT_APP_ID
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_APP_ID
+        - name: JWT_ACCEPTED_ISSUERS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_ACCEPTED_ISSUERS
+        - name: JWT_ACCEPTED_AUDIENCES
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_ACCEPTED_AUDIENCES
+        - name: JWT_APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-jwt
+              key: JWT_APP_SECRET
+        - name: JWT_TOKEN_AUTH_MODULE
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JWT_TOKEN_AUTH_MODULE
+        - name: JICOFO_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-passwords
+              key: JICOFO_AUTH_PASSWORD
+        - name: JVB_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-passwords
+              key: JVB_AUTH_PASSWORD
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: TZ
+        # Import prosody-specific config
+        - name: ENABLE_GUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-prosody-config
+              key: ENABLE_GUESTS
+        - name: GLOBAL_MODULES
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-prosody-config
+              key: GLOBAL_MODULES
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-prosody-config
+              key: LOG_LEVEL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: 5222
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 5222
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+# Jicofo (Conference Focus) Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jicofo
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jicofo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jitsi-meet
+      component: jicofo
+  template:
+    metadata:
+      labels:
+        app: jitsi-meet
+        component: jicofo
+    spec:
+      containers:
+      - name: jicofo
+        image: jitsi/jicofo:stable-9258
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8888
+          protocol: TCP
+        env:
+        # Import common config
+        - name: PUBLIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: PUBLIC_URL
+        - name: XMPP_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_DOMAIN
+        - name: XMPP_AUTH_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_AUTH_DOMAIN
+        - name: XMPP_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_MUC_DOMAIN
+        - name: XMPP_INTERNAL_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_INTERNAL_MUC_DOMAIN
+        - name: XMPP_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_SERVER
+        - name: JVB_BREWERY_MUC
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_BREWERY_MUC
+        - name: JICOFO_COMPONENT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JICOFO_COMPONENT_SECRET
+        - name: JICOFO_AUTH_USER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JICOFO_AUTH_USER
+        - name: JICOFO_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-passwords
+              key: JICOFO_AUTH_PASSWORD
+        - name: ENABLE_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: ENABLE_AUTH
+        - name: AUTH_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: AUTH_TYPE
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: TZ
+        # Import jicofo-specific config
+        - name: JICOFO_ENABLE_AUTH
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jicofo-config
+              key: JICOFO_ENABLE_AUTH
+        - name: JICOFO_ENABLE_BRIDGE_HEALTH_CHECKS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jicofo-config
+              key: JICOFO_ENABLE_BRIDGE_HEALTH_CHECKS
+        - name: JICOFO_MAX_MEMORY
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jicofo-config
+              key: JICOFO_MAX_MEMORY
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "1Gi"
+            cpu: "800m"
+        livenessProbe:
+          tcpSocket:
+            port: 8888
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+---
+# JVB (Videobridge) Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jvb
+  namespace: jitsi
+  labels:
+    app: jitsi-meet
+    component: jvb
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jitsi-meet
+      component: jvb
+  template:
+    metadata:
+      labels:
+        app: jitsi-meet
+        component: jvb
+    spec:
+      containers:
+      - name: jvb
+        image: jitsi/jvb:stable-9258
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: rtp-udp
+          containerPort: 10000
+          protocol: UDP
+        - name: colibri
+          containerPort: 8080
+          protocol: TCP
+        env:
+        # Import common config
+        - name: PUBLIC_URL
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: PUBLIC_URL
+        - name: XMPP_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_DOMAIN
+        - name: XMPP_AUTH_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_AUTH_DOMAIN
+        - name: XMPP_INTERNAL_MUC_DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_INTERNAL_MUC_DOMAIN
+        - name: XMPP_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: XMPP_SERVER
+        - name: JVB_BREWERY_MUC
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_BREWERY_MUC
+        - name: JVB_AUTH_USER
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: JVB_AUTH_USER
+        - name: JVB_AUTH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: jitsi-passwords
+              key: JVB_AUTH_PASSWORD
+        - name: TZ
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-common-config
+              key: TZ
+        # Import JVB-specific config
+        - name: JVB_ENABLE_APIS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: JVB_ENABLE_APIS
+        - name: JVB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: JVB_PORT
+        - name: JVB_TCP_HARVESTER_DISABLED
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: JVB_TCP_HARVESTER_DISABLED
+        - name: JVB_STUN_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: JVB_STUN_SERVERS
+        - name: JVB_MAX_MEMORY
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: JVB_MAX_MEMORY
+        - name: COLIBRI_WEBSOCKET_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: jitsi-jvb-config
+              key: COLIBRI_WEBSOCKET_ENABLED
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1500m"
+        livenessProbe:
+          httpGet:
+            path: /about/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /about/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
